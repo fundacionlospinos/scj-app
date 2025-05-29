@@ -1,0 +1,151 @@
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+enum RolesEnum {
+    DIRECTIVE
+    ADMIN
+    EDUCATOR
+    STUDENT
+    DEVELOPER
+}
+
+enum DayEnum {
+    MONDAY
+    TUESDAY
+    WEDNESDAY
+    THURSDAY
+    FRIDAY
+    SATURDAY
+    SUNDAY
+    NONE
+}
+
+enum StatusEnum {
+    ATTENDED
+    ATTENDED_EXCUSED
+    NOT_ATTENDED
+    NOT_DETERMINED
+}
+
+model User {
+    id               String    @id @default(uuid())
+    name             String
+    lastName         String
+    password         String
+    email            String    @unique
+    documentIdentity String
+    role             RolesEnum
+    description      String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    workshops Workshops[]
+}
+
+model Students {
+    id String @id @default(uuid())
+
+    name             String
+    lastName         String
+    institute        String
+    dateOfBirth      DateTime
+    educationalLevel String
+    instituteName    String
+    photo            String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    workshops          StudentsToWorkshop[]
+    initialAssistances InitialAssistances?
+    assistances        Assistances[]
+}
+
+model InitialAssistances {
+    id String @id @default(uuid())
+
+    studentId String     @unique
+    student   Students   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    status    StatusEnum @default(NOT_DETERMINED)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Workshops {
+    id          String               @id @default(uuid())
+    name        String
+    description String
+    photo       String?
+    students    StudentsToWorkshop[]
+    assistances Assistances[]
+    absents     Absents[]
+    workshopsByDay WorkshopsByDay[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    teacher   User   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+    teacherId String
+}
+
+model WorkshopsByDay {
+    id         String @id @default(uuid())
+    workshopId String
+
+    day      DayEnum
+    workshop Workshops @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model StudentsToWorkshop {
+    id String @id @default(uuid())
+
+    student   Students @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    studentId String
+
+    workshop   Workshops @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+    workshopId String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Assistances {
+    id String @id @default(uuid())
+
+    studentId  String
+    workshopId String
+
+    workshop Workshops @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+    student  Students  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+    status StatusEnum @default(NOT_DETERMINED)
+    date   DateTime   @default(now())
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Absents {
+    id String @id @default(uuid())
+
+    studentId  String
+    workshopId String
+    date       DateTime @default(now())
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    workshop Workshops @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+}

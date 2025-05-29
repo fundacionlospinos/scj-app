@@ -33,7 +33,7 @@ yarn-error.log*
 .vercel
 
 # prisma
-/prisma/
+/prisma/migrations
 
 # typescript
 *.tsbuildinfo
